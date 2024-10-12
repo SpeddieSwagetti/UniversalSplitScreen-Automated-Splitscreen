@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -387,6 +389,69 @@ namespace UniversalSplitScreen.Core
 			WinApi.RefreshWindow(_activeHWnd);
 		}
 
+		public void AutoSetSplitscreenWindows()
+		{
+			var allProcesses = Process.GetProcesses();
+			var targetProcess = allProcesses.Where(x => x.MainWindowHandle == _activeHWnd).FirstOrDefault();
+			var allTargetProcesses = new List<Process>();
+
+			windows.Clear();
+
+			foreach (Process process in allProcesses)
+			{
+				if(process.MainWindowTitle == targetProcess.MainWindowTitle 
+					|| process.ProcessName == targetProcess.ProcessName)
+				{
+					allTargetProcesses.Add(process);
+				}
+			}
+
+			var windowsList = new List<Window>();
+			foreach (var process in allTargetProcesses)
+			{
+				windowsList.Add(new Window(process.MainWindowHandle));
+			}
+
+			if(windowsList.Count == 2)
+			{
+				Options.CurrentOptions.ExtraHeight = "0";
+
+				_activeHWnd = windowsList[0].hWnd;
+				ToggleWindowBorders();
+				MoveWindow(WindowPosition.Left);
+				ShowWindowAsync(new HandleRef(null, _activeHWnd), SW_RESTORE);
+				WinApi.SetForegroundWindow(_activeHWnd.ToInt32());
+				WinApi.BringToFront(_activeHWnd);
+
+				_activeHWnd = windowsList[1].hWnd;
+				ToggleWindowBorders();
+				MoveWindow(WindowPosition.Right);
+				ShowWindowAsync(new HandleRef(null, _activeHWnd), SW_RESTORE);
+				WinApi.SetForegroundWindow(_activeHWnd.ToInt32());
+				WinApi.BringToFront(_activeHWnd);
+
+			}
+		}
+
+		[DllImport("user32.dll")]
+		public static extern bool ShowWindowAsync(HandleRef hWnd, int nCmdShow);
+		[DllImport("user32.dll")]
+		public static extern bool SetForegroundWindow(IntPtr WindowHandle);
+		public const int SW_RESTORE = 9;
+
+		public static IntPtr GetWindowHandleByTitle(string wName)
+		{
+			IntPtr hWnd = IntPtr.Zero;
+			foreach (Process pList in Process.GetProcesses())
+			{
+				if (pList.MainWindowTitle.Contains(wName))
+				{
+					hWnd = pList.MainWindowHandle;
+				}
+			}
+			return hWnd;
+		}
+
 		public void MoveWindow(WindowPosition position)
 		{
 			int screenWidth = Screen.PrimaryScreen.Bounds.Width;
@@ -491,7 +556,8 @@ namespace UniversalSplitScreen.Core
 
 		public void SetControllerIndex(int index)
 		{
-			if (!windows.ContainsKey(_activeHWnd)) windows[_activeHWnd] = new Window(_activeHWnd);
+			if (!windows.ContainsKey(_activeHWnd)) 
+				windows[_activeHWnd] = new Window(_activeHWnd);
 
 			Window window = windows[_activeHWnd];
 			window.ControllerIndex = index;

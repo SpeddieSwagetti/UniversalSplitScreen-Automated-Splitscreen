@@ -469,5 +469,15 @@ namespace UniversalSplitScreen.UI
 		{
 			Program.SplitScreenManager.MoveWindow(WindowPosition.BottomRight);
 		}
+
+		private void Button_AutoSplitscreen_Click(object sender, EventArgs e)
+		{
+			Program.SplitScreenManager.AutoSetSplitscreenWindows();
+		}
+
+		private void Form1_Load(object sender, EventArgs e)
+		{
+
+		}
 	}
 }

@@ -116,6 +116,18 @@ namespace UniversalSplitScreen.Core
 				0x0002 | 0x0001 | 0x0004 | 0x0020);//SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
 		}
 
+		public static bool BringToFront(IntPtr hWnd)
+		{
+			return SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0,
+				TOPMOST_FLAGS);//SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+		}
+
+		static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+		const UInt32 SWP_NOSIZE = 0x0001;
+		const UInt32 SWP_NOMOVE = 0x0002;
+		const UInt32 TOPMOST_FLAGS = SWP_NOMOVE | SWP_NOSIZE;
+
+
 		//[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
 		//public static extern bool DrawIcon(HandleRef hDC, int x, int y, HandleRef hIcon);
 
